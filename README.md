@@ -56,7 +56,36 @@ Car's velocity determines the number of way points to be generated. Also, the la
 ## FSM based velocity and lane
 The idea is to observe the behivor of other cars and adjust our car's velocity and lane. At each point of time, the car can either decide to drive in its own lane or change lanes. As the lane changing requires velocity adjustment to the target lane, the car can be in a state where it's deciding whether it should change lanes or not. Given that there are two possiblities for lane change (left and right), the car can be in one of the following states, 1. Keep driving in Lane. 2. Prepare Lane Change Left, 3. Prepare Lane Change Right, 4. Lane Change Left, 5. Lane Change Right. State list and transitioning is detailed in Vehicle.cpp and Vehicle.h.
 
+These states conflict with each other as at times, staying in the lane is better than going in the left lane. However, driving in the current lane may result in un-necessary delays. State transition is decided based on a cost function. Cost function essentially determines whether it is better to stay in the current lane or change lanes. First, I describe possible states and then the cost function.
 
+### Keep Lane
+In this state, the program tries to see whether it's good for the car to stay in the current lane. One important aspect here is adjusting the speed of the car. There may be a car driving in the current lane at lower speed, the car needs to adjust its speed based on it. This is decided with two variables. 1. Buffer and 2. Speed of the car in front. As the car approaches to the car in front, buffer reduces, resulting in decreased car velocity. Also, the car need not decrese the velocity once it finds itself with the velocity of the car in front. With lower buffer, the car tries to reudce more velocity.
+
+### Prepare Lane Change
+In this state, the car tries to adjust its velocity to the left/right lane's car. The car keeps itself in this state until it finds a clear left/right lane to move into. The velocity is adjusted according to either the vehicle in front or the vehicle in front in the left/right lane. In other words, in this state, car has already decided that lane change is the best strategy. For lane change, it may need to reduce its velocity to match to the velocity of the car in left/right lane, at the same time, not hitting the car in back or front in current lane.
+
+### Lane Change
+As soon as car finds an empty spot in the target lane (left or right), it gets into that lane. One important difference in this state from other two states is that it does not increase the velocity and reduce its velocity by at least a constance (since it may be turning).
+
+In both Prepare Lange Change and Lane Change state, the car checkes far left and far right lane if available and decides whether it should be moving in those lanes as well.
+
+## Cost function
+These decisions are based on a cost function which essentially checks for the following costs,
+1. Possible collision
+2. Front Buffer
+3. Velocity change required
+4. Velocity that can be achieved
+5. Back buffer
+
+These costs are numbered according to their importance in deciding the state. I.e., cost associated with 1 is considered higher than cost associated with 2 and so on.
+
+The first and foremost is to check whether moving to the left/right lane can result in a collision. If it does, then it is better to stay in the current lane. This also has an implication in sudden events like, a car decides to abruptly change its lane to current lane. In this case, there may be a possible collision if we stay in the current lane, hence it is better to move to the left or right lane even if it results in the decreased velocity. This cost is checked based on both, front buffer and back buffer.
+
+Another important cost is front buffer, it is good to drive in the lane that has a lot of empty space. If there is a car in a lane with a lot of empty space, going at relatively slower speed, it is still good to drive in that lane than being a lane with less buffer but relatively higher speed. As with larger buffer space, we hae a better probability to find another lane and move into that lane. Hence, this is cost is considered more important than other costs like target velocity of the car and velocity change required.
+
+Velocity change required is also an important measure since we may not want to drive in a lane requiring steep velocity changes. Hence, this cost is considered. Similarly, we would want to drive in a lane where we can get a good velocity i.e. drive in the lane where the fastest car or no car is driven. This is decided by velocity that can be achieved cost.
+
+Last, we want to drive in the lane where we have enough buffer between our car and the car behind it. Hence, the consideration of this cost. Cost.h and Cost.cpp has code that emulates the behivior as described.
 
 ## Dependencies
 
