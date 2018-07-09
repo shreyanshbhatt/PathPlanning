@@ -46,14 +46,14 @@ Here is the data provided from the Simulator to the C++ Program
 2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
 
 
-#Approach
+# Approach
 The current project solves the given problem of driving car with conditions given in the problem statement. Following details the approach.
 ## Point generation
 As the simulator expects (x, y) co-ordinates for the car's next location, the program essentially generates these co-ordinates. The simulator is supposed to get these co-ordinates (where the car should be) in every 0.02 seconds.Hence, a large list of co-ordinates results in longer path to travel in 0.02 seconds. In other words, path length determines car's velocity and vice versa. Given this, I have essentially approached the problem in generating these (x, y) co-oridnates or so-called way points for every 0.02 seconds. For simplicity, I have used frenet co-ordinates to generate the path. Specifically, for each 0.02 seconds, the program generates two way points each 30 meters away from each other. Spline tool is then used to compute a smooth path between these points.
 
 Car's velocity determines the number of way points to be generated. Also, the lane (one of co-ordinate in frenet co-ordinate) determines where the car is going to be be. Hence, the task is now to come up with the lane that the car should be driven and the velocity. I have used Finite State Machine based approach for generating lane and velocity.
 
-##FSM based velocity and lane
+## FSM based velocity and lane
 The idea is to observe the behivor of other cars and adjust our car's velocity and lane. At each point of time, the car can either decide to drive in its own lane or change lanes. As the lane changing requires velocity adjustment to the target lane, the car can be in a state where it's deciding whether it should change lanes or not. Given that there are two possiblities for lane change (left and right), the car can be in one of the following states, 1. Keep driving in Lane. 2. Prepare Lane Change Left, 3. Prepare Lane Change Right, 4. Lane Change Left, 5. Lane Change Right. State list and transitioning is detailed in Vehicle.cpp and Vehicle.h.
 
 
