@@ -357,7 +357,7 @@ int main() {
 
           double x_add_on = 0;
 
-          for (int i = 1; i <= 50 - previous_path_x.size(); i++) {
+          for (int i = 1; i <= 30 - previous_path_x.size(); i++) {
             // Divide by 2.24 to convert miles/hour to meters/second
             double N = (target_dist / (0.02 * ref_velocity / 2.24));
             double x_pt = x_add_on + (target_x) / N;
