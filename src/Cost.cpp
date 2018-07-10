@@ -8,7 +8,7 @@ double CostCalculator::getCost(std::vector<std::vector<double>> sensor_data, dou
   }
   double cost = 0.0;
   if (cur_lane_ != d_) {
-    cost += 4.0;
+    cost += 2.0;
   }
   double buffer_val = std::min(buffer_front_, 100.0);
   double b_buffer_val = std::min(buffer_back_, 30.0);

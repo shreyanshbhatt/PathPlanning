@@ -200,7 +200,7 @@ int main() {
 
   double ref_velocity = 0.0;
   int lane = 1;
-  VehicleState vs(0.0, 1.0, 0.0);
+  VehicleState vs(0.0, 1.0, 5.0);
   Vehicle v(vs);
   h.onMessage([&v, &ref_velocity, &lane, &map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
                &map_waypoints_dx,
@@ -255,42 +255,12 @@ int main() {
             car_s = end_path_s;
           }
 
-#if 0
-          bool too_close = false;
-
-          for (int i = 0; i < sensor_fusion.size(); i++) {
-            float d = sensor_fusion[i][6];
-            if (d < (2 + 4*lane + 2) && d > (2 + 4*lane - 2)) {
-              double vx = sensor_fusion[i][3];
-              double vy = sensor_fusion[i][4];
-              double check_speed = sqrt(vx*vx + vy*vy);
-              double check_car_s = sensor_fusion[i][5];
-              // Important. so from the perspective of previous path wher
-              // are the cars going to be
-              check_car_s += ((double)prev_size * 0.02 * check_speed);
-
-              if ((check_car_s > car_s) && (check_car_s - car_s < 30)) {
-                // You can change lanes too
-                // ref_velocity = 29.5;
-                too_close = true;
-                // Change lanes
-                if (lane > 0) {
-                  lane = 0;
-                }
-
-              }
-            }
-          }
-
-          if (too_close) {
-            ref_velocity -= 0.224; // 5 m/s^2
-          } else if (ref_velocity < 49.5) {
-            ref_velocity += 0.224;
-          }
-#endif
           // Sparse way points
+          // magic happens here. Get the appropriate lane and velocity based on FSM
           const VehicleState &vs_updated = v.getBestTrajectory(sensor_fusion, prev_size, car_s);
           double new_d = 2 + 4 * vs_updated.d_;
+
+
           ref_velocity = vs_updated.velocity_;
           vector<double> ptsx;
           vector<double> ptsy;
@@ -320,25 +290,30 @@ int main() {
             ptsy.push_back(ref_y);
           }
 
-          // max_s = 6945.554;
+          // Generate spline for a large range so as to generate a smooth path
           double new_s = car_s + 30;
           vector<double> way_pt_0 = getXY(new_s, new_d, map_waypoints_s,
                                           map_waypoints_x, map_waypoints_y);
-          new_s = car_s + 60;
+          new_s = car_s + 70;
           vector<double> way_pt_1 = getXY(new_s, new_d, map_waypoints_s,
                                           map_waypoints_x, map_waypoints_y);
-          new_s = car_s + 90;
+          new_s = car_s + 100;
           vector<double> way_pt_2 = getXY(new_s, new_d, map_waypoints_s,
                                           map_waypoints_x, map_waypoints_y);
-
-
+#if 0
+          new_s = car_s + 80;
+          vector<double> way_pt_3 = getXY(new_s, new_d, map_waypoints_s,
+                                          map_waypoints_x, map_waypoints_y);
+#endif
           ptsx.push_back(way_pt_0[0]);
           ptsx.push_back(way_pt_1[0]);
           ptsx.push_back(way_pt_2[0]);
+//          ptsx.push_back(way_pt_3[0]);
 
           ptsy.push_back(way_pt_0[1]);
           ptsy.push_back(way_pt_1[1]);
           ptsy.push_back(way_pt_2[1]);
+//          ptsy.push_back(way_pt_3[1]);
 
 
           for (int i = 0; i < ptsx.size(); i++) {
@@ -357,12 +332,13 @@ int main() {
             [](std::tuple<double, double> const &t1, std::tuple<double, double> const &t2) {
               return std::get<0>(t1) < std::get<0>(t2); // or use a custom compare function
           });
-
+#if 0
+          Just in case. Spline requires sorted x co-ordinates
           for (int i = 0; i < ptsx.size(); i++) {
             ptsx[i] = std::get<0>(pts_sorted[i]);
             ptsy[i] = std::get<1>(pts_sorted[i]);
           }
-
+#endif
           tk::spline s;
           s.set_points(ptsx, ptsy);
 
@@ -381,7 +357,7 @@ int main() {
 
           double x_add_on = 0;
 
-          for (int i = 1; i <= 30 - previous_path_x.size(); i++) {
+          for (int i = 1; i <= 50 - previous_path_x.size(); i++) {
             // Divide by 2.24 to convert miles/hour to meters/second
             double N = (target_dist / (0.02 * ref_velocity / 2.24));
             double x_pt = x_add_on + (target_x) / N;

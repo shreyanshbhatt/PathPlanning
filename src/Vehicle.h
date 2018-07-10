@@ -22,6 +22,7 @@ class VehicleState {
   double velocity_;
 };
 
+// Class for the current car.
 class Vehicle {
   VehicleState vs_;
   VehicleState vs_temp_;
@@ -29,10 +30,13 @@ class Vehicle {
   std::tuple<double, double, double, double> get_front_car_(float l);
   float get_possible_left_lane(float l);
   float get_possible_right_lane(float l);
-  double get_vel_reducer_(double buffer);
+  double get_vel_reducer_(double buffer, double fval);
   double getPLCTrajectory_(float il, float il2);
   double getLCTrajectory_(float il1, float il2);
  public:
+  // Possible states. Note that KLBuf and KLBuf2 are not really required
+  // It is to make sure that once we change lange we don't start chaging
+  // lanes immediately.
   enum states:int  {KL, PLCL, LCL, PLCR, LCR, KLBuf, KLBuf2};
 
   Vehicle(VehicleState vs) {

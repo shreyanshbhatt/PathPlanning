@@ -11,10 +11,10 @@ class CostCalculator {
 
   double collision_cost_ = 1.0;
   double buffer_cost_ = 0.5;
-  double b_buffer_cost_ = 0.1;
-  double vel_cost_ = 0.5;
+  double b_buffer_cost_ = 0.8;
+  double vel_cost_ = 0.3;
   double lane_change_cost_ = 0.2;
-  double val_c_req_cost_ = 0.3;
+  double val_c_req_cost_ = 0.5;
  public:
   CostCalculator();
   CostCalculator(double d, double bback, double bfront, double vel, float cur_lane) {

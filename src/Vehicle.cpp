@@ -39,7 +39,7 @@ double Vehicle::getKLTrajectory() {
   double buffer_b = std::get<2>(f_v);
   double val_change_req = 0.0;
   if (buffer_f < 30.0)
-    val_change_req = get_vel_reducer_(buffer_f);
+    val_change_req = get_vel_reducer_(buffer_f, fvel);
 
   double intended_velocity = (fvel > 49.5)?fvel:49.5;
   //std::cout << f_v.velocity_ << std::endl;
@@ -54,9 +54,9 @@ double Vehicle::getKLTrajectory() {
     }
   } else if (buffer_f >= 40.0 && vs_temp_.velocity_ < 49.5) {
     float val_to_consider = std::min(50.0, buffer_f);
-    vs_temp_.velocity_ += (val_to_consider/15.0)*0.045;
+    vs_temp_.velocity_ += (val_to_consider/20.0)*0.045;
   } else if (vs_temp_.velocity_ < fvel && vs_temp_.velocity_ < 49.5) {
-    vs_temp_.velocity_ += (buffer_f/15.0)*0.045;
+    vs_temp_.velocity_ += (buffer_f/20.0)*0.045;
   }
   temp_state_ = KL;
   // std::cout << cost << std::endl;
@@ -94,10 +94,15 @@ double Vehicle::getPLCTrajectory_(float intended_lane, float intended_lane_2) {
   double fval_this = std::get<1>(f_v);
   double cfval = std::get<1>(cf_v);
   double val_change_req = 0.0;
-  double min_cf_buff = (cf_buff < f_buff)?cf_buff:f_buff;
+  double min_cf_buff = cf_buff;
+  double min_f_val = std::get<1>(cf_v);
+  if (cf_buff < f_buff) {
+    min_cf_buff = f_buff;
+    min_f_val = fval_this;
+  }
   double min_cb_buff = std::min(std::get<2>(cf_v), std::get<2>(f_v));
   if (min_cf_buff < 30.0)
-    val_change_req = get_vel_reducer_(min_cf_buff);
+    val_change_req = get_vel_reducer_(min_cf_buff, fval_this);
 
   if (intended_lane_2 != -1.0f) {
     const auto &rmf_v = get_front_car_(intended_lane_2);
@@ -119,9 +124,9 @@ double Vehicle::getPLCTrajectory_(float intended_lane, float intended_lane_2) {
     }
   } else if (min_cf_buff > 40.0 && vs_temp_.velocity_ < 49.5) {
     float val_to_consider = std::min(50.0, min_cf_buff);
-    vs_temp_.velocity_ += (val_to_consider/15.0)*0.045;
+    vs_temp_.velocity_ += (val_to_consider/20.0)*0.045;
   } else if (vs_temp_.velocity_ < std::min(cfval, fval_this)) {
-    vs_temp_.velocity_ += (min_cf_buff/15.0)*0.045;
+    vs_temp_.velocity_ += (min_cf_buff/20.0)*0.045;
   }
   return cost;
 }
@@ -154,8 +159,11 @@ double Vehicle::getPLCRTrajectory() {
   return getPLCTrajectory_(intended_lane, intended_lane_2);
 }
 
-double Vehicle::get_vel_reducer_(double buffer) {
-  double ret = (2.0 + ((50.0 - buffer)/22.0)) * 0.045;
+double Vehicle::get_vel_reducer_(double buffer, double f_v_vel) {
+  double change = (vs_.velocity_*0.447) - f_v_vel*0.447;
+  double factor = buffer/change;
+  double ret = (change/factor) * 0.045;
+  // double ret = (0.0 + ((50.0 - buffer)/4.0)) * 0.045;
   return ret;
 }
 
@@ -171,7 +179,7 @@ double Vehicle::getLCTrajectory_(float intended_lane, float intended_lane_2) {
   double f_v_this = std::get<1>(tf_buff);
   double val_change_req = 0.0;
   if (f_buff < 30.0)
-    val_change_req = get_vel_reducer_(f_buff);
+    val_change_req = get_vel_reducer_(f_buff, f_v_this);
   if (intended_lane_2 != -1.0f) {
     const auto &rmf_v = get_front_car_(intended_lane_2);
     double left_most_val = std::get<1>(rmf_v);

@@ -73,19 +73,32 @@ In both Prepare Lange Change and Lane Change state, the car checkes far left and
 These decisions are based on a cost function which essentially checks for the following costs,
 1. Possible collision
 2. Front Buffer
-3. Velocity change required
-4. Velocity that can be achieved
-5. Back buffer
+3. Back buffer
+4. Velocity change required
+5. Velocity that can be achieved
 
 These costs are numbered according to their importance in deciding the state. I.e., cost associated with 1 is considered higher than cost associated with 2 and so on.
 
 The first and foremost is to check whether moving to the left/right lane can result in a collision. If it does, then it is better to stay in the current lane. This also has an implication in sudden events like, a car decides to abruptly change its lane to current lane. In this case, there may be a possible collision if we stay in the current lane, hence it is better to move to the left or right lane even if it results in the decreased velocity. This cost is checked based on both, front buffer and back buffer.
 
-Another important cost is front buffer, it is good to drive in the lane that has a lot of empty space. If there is a car in a lane with a lot of empty space, going at relatively slower speed, it is still good to drive in that lane than being a lane with less buffer but relatively higher speed. As with larger buffer space, we hae a better probability to find another lane and move into that lane. Hence, this is cost is considered more important than other costs like target velocity of the car and velocity change required.
+Next are buffer costs. Front buffer cost is considered more important. It is good to drive in the lane that has a lot of empty space. If there is a car in a lane with a lot of empty space, going at relatively slower speed, it is still good to drive in that lane than being a lane with less buffer but relatively higher speed. As with larger buffer space, we hae a better probability to find another lane and move into that lane. Hence, this is cost is considered more important than other costs like target velocity of the car and velocity change required. Back buffer cost takes care of changing lane such that the car does not get too close to the car in the back. It also helps changing lanes when the car on the back is driving fast and getting close.
 
 Velocity change required is also an important measure since we may not want to drive in a lane requiring steep velocity changes. Hence, this cost is considered. Similarly, we would want to drive in a lane where we can get a good velocity i.e. drive in the lane where the fastest car or no car is driven. This is decided by velocity that can be achieved cost.
 
-Last, we want to drive in the lane where we have enough buffer between our car and the car behind it. Hence, the consideration of this cost. Cost.h and Cost.cpp has code that emulates the behivior as described.
+## Misc.
+Setting the number of way points to generate is also a key factor. If the spline is drawn from a line that is very short, we may end up having uneven distribution of points which may abruptly increase velocity. Hence, I had to play with those numbers. Car acceleration is set to a lower limit than it should be. Just because I want the car to be driven safe.
+
+## Improvements
+- Costs are not normalized before adding them. For now, I have made sure that costs are added such that they don't mismatch but a good normalization function is required.
+
+- Car velocity decrement should also be according to the velocity of the back vehicle. That way, the car can achieve velocity almost equal to back vehicle of the lane that the vehicle wants to be in. It can certainly improve time it takes to reach to the destination.
+
+- Two temporary states KLBuf, KLBuf2 (Vehicle.h, Vehicle.cpp) are not really required. A better way to handle frequent lane changes is required.
+
+- Spline, sometimes, generates way points that are not at equal distance. This should be handled in the program.
+
+## Demo
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/1Ijn-hBiQIs/0.jpg)](http://www.youtube.com/watch?v=1Ijn-hBiQIs)
 
 ## Dependencies
 
